@@ -1,4 +1,4 @@
-package handler
+package utils
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 )
 
 // httpStatusForError maps domain errors to appropriate HTTP status codes.
-func httpStatusForError(err error) int {
+func HttpStatusForError(err error) int {
 	switch {
 	case errors.Is(err, constants.ErrChargerNotFound):
 		return http.StatusNotFound

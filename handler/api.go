@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"presto_tou_service/constants"
 	"presto_tou_service/domain"
+	"presto_tou_service/utils"
 	"strings"
 	"time"
 )
@@ -24,10 +25,6 @@ import (
 // @Router       /chargers/{id}/price [get]
 func (h *HttpHandler) HandleGetPrice(w http.ResponseWriter, r *http.Request) {
 	chargerID := r.PathValue("id")
-	if strings.TrimSpace(chargerID) == constants.Empty {
-		writeError(w, http.StatusBadRequest, "charger_id cannot be empty")
-		return
-	}
 
 	timeParam := strings.TrimSpace(r.URL.Query().Get("timestamp"))
 	if timeParam == constants.Empty {
@@ -43,7 +40,7 @@ func (h *HttpHandler) HandleGetPrice(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.GetPriceForTime(r.Context(), chargerID, parsedTime)
 	if err != nil {
-		status := httpStatusForError(err)
+		status := utils.HttpStatusForError(err)
 		writeError(w, status, err.Error())
 		return
 	}
@@ -65,14 +62,10 @@ func (h *HttpHandler) HandleGetPrice(w http.ResponseWriter, r *http.Request) {
 // @Router       /chargers/{id}/schedules [get]
 func (h *HttpHandler) HandleGetSchedules(w http.ResponseWriter, r *http.Request) {
 	chargerID := r.PathValue("id")
-	if strings.TrimSpace(chargerID) == constants.Empty {
-		writeError(w, http.StatusBadRequest, "charger_id cannot be empty")
-		return
-	}
 
 	schedules, err := h.service.GetSchedules(r.Context(), chargerID)
 	if err != nil {
-		status := httpStatusForError(err)
+		status := utils.HttpStatusForError(err)
 		writeError(w, status, err.Error())
 		return
 	}
@@ -105,10 +98,6 @@ func (h *HttpHandler) HandleGetSchedules(w http.ResponseWriter, r *http.Request)
 // @Router       /chargers/{id}/schedules [put]
 func (h *HttpHandler) HandlePutSchedules(w http.ResponseWriter, r *http.Request) {
 	chargerID := r.PathValue("id")
-	if strings.TrimSpace(chargerID) == constants.Empty {
-		writeError(w, http.StatusBadRequest, "charger_id cannot be empty")
-		return
-	}
 
 	var schedules []domain.TOUSchedule
 	if err := json.NewDecoder(r.Body).Decode(&schedules); err != nil {
@@ -117,7 +106,7 @@ func (h *HttpHandler) HandlePutSchedules(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err := h.service.UpdateSchedules(r.Context(), chargerID, schedules); err != nil {
-		status := httpStatusForError(err)
+		status := utils.HttpStatusForError(err)
 		writeError(w, status, err.Error())
 		return
 	}
@@ -139,10 +128,6 @@ func (h *HttpHandler) HandlePutSchedules(w http.ResponseWriter, r *http.Request)
 // @Router       /chargers/{id}/schedules [patch]
 func (h *HttpHandler) HandlePatchSchedule(w http.ResponseWriter, r *http.Request) {
 	chargerID := r.PathValue("id")
-	if strings.TrimSpace(chargerID) == constants.Empty {
-		writeError(w, http.StatusBadRequest, "charger_id cannot be empty")
-		return
-	}
 
 	var schedule domain.TOUSchedule
 	if err := json.NewDecoder(r.Body).Decode(&schedule); err != nil {
@@ -151,7 +136,7 @@ func (h *HttpHandler) HandlePatchSchedule(w http.ResponseWriter, r *http.Request
 	}
 
 	if err := h.service.UpdatePartialSchedule(r.Context(), chargerID, schedule); err != nil {
-		status := httpStatusForError(err)
+		status := utils.HttpStatusForError(err)
 		writeError(w, status, err.Error())
 		return
 	}
@@ -178,7 +163,7 @@ func (h *HttpHandler) HandleBulkUpdateSchedules(w http.ResponseWriter, r *http.R
 	}
 
 	if err := h.service.BulkUpdateSchedules(r.Context(), req.ChargerIDs, req.Schedules); err != nil {
-		status := httpStatusForError(err)
+		status := utils.HttpStatusForError(err)
 		writeError(w, status, err.Error())
 		return
 	}

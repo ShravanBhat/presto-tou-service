@@ -8,7 +8,7 @@ import (
 // Repository defines the data-layer contract.
 type Repository interface {
 	GetChargerByID(ctx context.Context, chargerID string) (*Charger, error)
-	GetPriceAtTime(ctx context.Context, chargerID string, localTime time.Time) (*PricingPeriod, float64, error)
+	GetPriceAtTime(ctx context.Context, chargerID string, localTimeStr string) (*PricingPeriod, float64, error)
 	ReplaceSchedules(ctx context.Context, chargerID string, schedules []TOUSchedule) error
 	UpdateSingleSchedule(ctx context.Context, chargerID string, schedule TOUSchedule) error
 	GetSchedulesByChargerID(ctx context.Context, chargerID string) ([]TOUSchedule, error)

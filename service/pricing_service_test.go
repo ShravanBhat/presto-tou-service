@@ -27,7 +27,7 @@ func (m *mockRepository) GetChargerByID(ctx context.Context, chargerID string) (
 	return m.charger, m.chargerErr
 }
 
-func (m *mockRepository) GetPriceAtTime(ctx context.Context, chargerID string, localTime time.Time) (*domain.PricingPeriod, float64, error) {
+func (m *mockRepository) GetPriceAtTime(ctx context.Context, chargerID string, localTimeStr string) (*domain.PricingPeriod, float64, error) {
 	return m.period, 0, m.periodErr
 }
 
@@ -298,25 +298,5 @@ func TestBulkUpdateSchedules_EmptyChargerIDs(t *testing.T) {
 	err := svc.BulkUpdateSchedules(context.Background(), []string{}, schedules)
 	if !errors.Is(err, constants.ErrEmptyChargerID) {
 		t.Errorf("expected ErrEmptyChargerID, got %v", err)
-	}
-}
-
-func TestTimeToMinutes(t *testing.T) {
-	tests := []struct {
-		input    string
-		expected int
-	}{
-		{"00:00", 0},
-		{"06:00", 360},
-		{"12:00", 720},
-		{"18:30", 1110},
-		{"23:59", 1439},
-	}
-
-	for _, tt := range tests {
-		result := timeToMinutes(tt.input)
-		if result != tt.expected {
-			t.Errorf("timeToMinutes(%s) = %d, expected %d", tt.input, result, tt.expected)
-		}
 	}
 }

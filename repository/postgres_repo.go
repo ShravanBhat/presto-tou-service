@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
-
 	"presto_tou_service/constants"
 	"presto_tou_service/domain"
 
@@ -49,8 +47,7 @@ func (r *PostgresRepo) GetChargerByID(ctx context.Context, chargerID string) (*d
 	return &c, nil
 }
 
-func (r *PostgresRepo) GetPriceAtTime(ctx context.Context, chargerID string, localTime time.Time) (*domain.PricingPeriod, float64, error) {
-	timeStr := localTime.Format("15:04:05")
+func (r *PostgresRepo) GetPriceAtTime(ctx context.Context, chargerID string, timeStr string) (*domain.PricingPeriod, float64, error) {
 	var period domain.PricingPeriod
 	var price float64
 
@@ -187,9 +184,6 @@ func (r *PostgresRepo) GetSchedulesByChargerID(ctx context.Context, chargerID st
 }
 
 func (r *PostgresRepo) BulkReplaceSchedules(ctx context.Context, chargerIDs []string, schedules []domain.TOUSchedule) error {
-	if len(chargerIDs) == 0 {
-		return constants.ErrEmptyChargerID
-	}
 
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
