@@ -183,7 +183,7 @@ func (r *PostgresRepo) GetSchedulesByChargerID(ctx context.Context, chargerID st
 	return schedules, nil
 }
 
-func (r *PostgresRepo) BulkReplaceSchedules(ctx context.Context, chargerIDs []string, schedules []domain.TOUSchedule) error {
+func (r *PostgresRepo) BulkReplaceSchedules(ctx context.Context, sortedIDs []string, schedules []domain.TOUSchedule) error {
 
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -191,14 +191,14 @@ func (r *PostgresRepo) BulkReplaceSchedules(ctx context.Context, chargerIDs []st
 	}
 	defer tx.Rollback()
 
-	// Lock chargers to avoid race conditions (ordered to prevent deadlocks)
-	_, err = tx.ExecContext(ctx, `SELECT id FROM chargers WHERE id = ANY($1) ORDER BY id FOR UPDATE`, pq.Array(chargerIDs))
+	// Lock chargers in sorted order to prevent deadlocks.
+	_, err = tx.ExecContext(ctx, `SELECT id FROM chargers WHERE id = ANY($1) ORDER BY id FOR UPDATE`, pq.Array(sortedIDs))
 	if err != nil {
 		return fmt.Errorf("failed to lock chargers: %w", err)
 	}
 
 	// Delete existing schedules for all specified chargers
-	_, err = tx.ExecContext(ctx, `DELETE FROM tou_schedules WHERE charger_id = ANY($1)`, pq.Array(chargerIDs))
+	_, err = tx.ExecContext(ctx, `DELETE FROM tou_schedules WHERE charger_id = ANY($1)`, pq.Array(sortedIDs))
 	if err != nil {
 		return fmt.Errorf("failed to delete schedules: %w", err)
 	}
@@ -207,7 +207,7 @@ func (r *PostgresRepo) BulkReplaceSchedules(ctx context.Context, chargerIDs []st
 	query := "INSERT INTO tou_schedules (charger_id, start_time, end_time, price_per_kwh) VALUES "
 	var vals []interface{}
 	i := 1
-	for _, chargerID := range chargerIDs {
+	for _, chargerID := range sortedIDs {
 		for _, s := range schedules {
 			query += fmt.Sprintf("($%d, $%d, $%d, $%d),", i, i+1, i+2, i+3)
 			vals = append(vals, chargerID, s.StartTime, s.EndTime, s.PricePerKwh)

@@ -23,19 +23,14 @@ The codebase strictly adheres to a domain-driven, layered architecture to separa
 ### 2. Timezone-Aware Querying
 EV chargers exist across different geographical locations.
 *   **Design**: Timezones are stored directly on the `Chargers` relational model (e.g., `America/Los_Angeles`).
-*   When a client requests the price for a specific global UTC timestamp, the service actively translates that UTC time into the specific charger's local timezone before querying the database. This guarantees that "peak hours" always map correctly to the charger's physical location.
+*   When a client requests the price for a specific timestamp, the service actively translates that time into the specific charger's local timezone before querying the database. This guarantees that "peak hours" always map correctly to the charger's physical location.
 
-### 3. Database Integrity & Exclusion Constraints
-Preventing overlapping schedules at the database level is notoriously difficult with standard time structures.
-*   **Design**: The PostgreSQL schema utilizes the `btree_gist` extension to enforce an `EXCLUDE` constraint using `tsrange`.
-*   Overnight periods are represented by setting `end_time` to `00:00:00` (midnight), which the schema maps to `24:00:00` when computing the exclusion range. This prevents overlapping pricing periods natively in the database, eliminating bugs where a charger might have two active prices at the same moment.
-
-### 4. Advanced Concurrency Control
+### 3. Advanced Concurrency Control
 Updating pricing schedules, especially in bulk, is highly susceptible to race conditions.
 *   **Pessimistic Locking**: When modifying a charger's schedule, the repository uses `SELECT ... FOR UPDATE` to lock rows, guaranteeing that parallel requests to update the same charger do not result in fragmented or duplicate schedules.
 *   **Deadlock Prevention**: In the bulk updater, charger IDs are sorted deterministically before acquiring locks (`ORDER BY id FOR UPDATE`). This prevents database deadlocks when two concurrent bulk-updates target overlapping sets of chargers.
 
-### 5. Strict Data Validation
+### 4. Strict Data Validation
 *   The service layer implements a mathematical validation (`validateSchedules`) that converts all time blocks into minutes across a 24-hour continuum (0 to 1440 minutes).
 *   It asserts that every schedule covers the entire day without a single minute missing and without any overlapping boundaries, guaranteeing 100% price coverage at all times.
 
@@ -101,7 +96,7 @@ go test ./... -v
 
 ### Prerequisites
 *   Go 1.25+
-*   PostgreSQL 14+ (ensure the `btree_gist` extension is enabled)
+*   PostgreSQL 14+
 
 ### Environment Configuration
 

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -23,9 +24,10 @@ func writeJSON(w http.ResponseWriter, status int, payload interface{}) {
 }
 
 // writeError writes a JSON error response with the given status code and message.
-func writeError(w http.ResponseWriter, status int, message string) {
+// The request ID from ctx is included in the log for internal server errors.
+func writeError(ctx context.Context, w http.ResponseWriter, status int, message string) {
 	if status == http.StatusInternalServerError {
-		log.Printf("Internal Server Error: %v", message)
+		log.Printf("[%s] Internal Server Error: %v", requestID(ctx), message)
 		message = "Internal Server Error"
 	}
 

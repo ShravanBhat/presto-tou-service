@@ -362,7 +362,7 @@ func TestWriteJSON(t *testing.T) {
 func TestWriteError(t *testing.T) {
 	w := httptest.NewRecorder()
 
-	writeError(w, http.StatusBadRequest, "test error message")
+	writeError(context.Background(), w, http.StatusBadRequest, "test error message")
 
 	resp := w.Result()
 	if resp.StatusCode != http.StatusBadRequest {

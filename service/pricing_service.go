@@ -6,6 +6,7 @@ import (
 	"presto_tou_service/constants"
 	"presto_tou_service/domain"
 	"presto_tou_service/utils"
+	"sort"
 	"strings"
 	"time"
 )
@@ -108,8 +109,15 @@ func (s *pricingService) BulkUpdateSchedules(ctx context.Context, chargerIDs []s
 			return fmt.Errorf("charger %s: %w", chargerID, err)
 		}
 	}
+	// Sort charger IDs in Go before acquiring locks.
+	// This guarantees a consistent lock-acquisition order regardless of how
+	// PostgreSQL traverses rows, preventing deadlocks when two concurrent
+	// bulk-updates target overlapping sets of chargers.
+	sortedIDs := make([]string, len(chargerIDs))
+	copy(sortedIDs, chargerIDs)
+	sort.Strings(sortedIDs)
 
-	return s.repo.BulkReplaceSchedules(ctx, chargerIDs, schedules)
+	return s.repo.BulkReplaceSchedules(ctx, sortedIDs, schedules)
 }
 
 func (s *pricingService) GetSchedules(ctx context.Context, chargerID string) ([]domain.TOUSchedule, error) {

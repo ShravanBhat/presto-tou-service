@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"presto_tou_service/constants"
 	"presto_tou_service/domain"
@@ -24,24 +25,28 @@ import (
 // @Failure      500  {object}  domain.ErrorResponse
 // @Router       /chargers/{id}/price [get]
 func (h *HttpHandler) HandleGetPrice(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	chargerID := r.PathValue("id")
 
 	timeParam := strings.TrimSpace(r.URL.Query().Get("timestamp"))
 	if timeParam == constants.Empty {
-		writeError(w, http.StatusBadRequest, "timestamp query parameter is required")
+		log.Printf("[%s] HandleGetPrice: missing timestamp query parameter", requestID(ctx))
+		writeError(ctx, w, http.StatusBadRequest, "timestamp query parameter is required")
 		return
 	}
 
 	parsedTime, err := time.Parse(time.RFC3339, timeParam)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "invalid timestamp format, use ISO8601 (e.g., 2024-01-15T10:30:00Z)")
+		log.Printf("[%s] HandleGetPrice: invalid timestamp %q: %v", requestID(ctx), timeParam, err)
+		writeError(ctx, w, http.StatusBadRequest, "invalid timestamp format, use ISO8601 (e.g., 2024-01-15T10:30:00Z)")
 		return
 	}
 
-	resp, err := h.service.GetPriceForTime(r.Context(), chargerID, parsedTime)
+	resp, err := h.service.GetPriceForTime(ctx, chargerID, parsedTime)
 	if err != nil {
+		log.Printf("[%s] HandleGetPrice: service error for chargerID=%s: %v", requestID(ctx), chargerID, err)
 		status := utils.HttpStatusForError(err)
-		writeError(w, status, err.Error())
+		writeError(ctx, w, status, err.Error())
 		return
 	}
 
@@ -61,12 +66,14 @@ func (h *HttpHandler) HandleGetPrice(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}  domain.ErrorResponse
 // @Router       /chargers/{id}/schedules [get]
 func (h *HttpHandler) HandleGetSchedules(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	chargerID := r.PathValue("id")
 
-	schedules, err := h.service.GetSchedules(r.Context(), chargerID)
+	schedules, err := h.service.GetSchedules(ctx, chargerID)
 	if err != nil {
+		log.Printf("[%s] HandleGetSchedules: service error for chargerID=%s: %v", requestID(ctx), chargerID, err)
 		status := utils.HttpStatusForError(err)
-		writeError(w, status, err.Error())
+		writeError(ctx, w, status, err.Error())
 		return
 	}
 
@@ -97,17 +104,20 @@ func (h *HttpHandler) HandleGetSchedules(w http.ResponseWriter, r *http.Request)
 // @Failure      500  {object}  domain.ErrorResponse
 // @Router       /chargers/{id}/schedules [put]
 func (h *HttpHandler) HandlePutSchedules(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	chargerID := r.PathValue("id")
 
 	var schedules []domain.TOUSchedule
 	if err := json.NewDecoder(r.Body).Decode(&schedules); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body, expected JSON array of schedules")
+		log.Printf("[%s] HandlePutSchedules: failed to decode request body for chargerID=%s: %v", requestID(ctx), chargerID, err)
+		writeError(ctx, w, http.StatusBadRequest, "invalid request body, expected JSON array of schedules")
 		return
 	}
 
-	if err := h.service.UpdateSchedules(r.Context(), chargerID, schedules); err != nil {
+	if err := h.service.UpdateSchedules(ctx, chargerID, schedules); err != nil {
+		log.Printf("[%s] HandlePutSchedules: service error for chargerID=%s: %v", requestID(ctx), chargerID, err)
 		status := utils.HttpStatusForError(err)
-		writeError(w, status, err.Error())
+		writeError(ctx, w, status, err.Error())
 		return
 	}
 
@@ -127,17 +137,20 @@ func (h *HttpHandler) HandlePutSchedules(w http.ResponseWriter, r *http.Request)
 // @Failure      500  {object}  domain.ErrorResponse
 // @Router       /chargers/{id}/schedules [patch]
 func (h *HttpHandler) HandlePatchSchedule(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	chargerID := r.PathValue("id")
 
 	var schedule domain.TOUSchedule
 	if err := json.NewDecoder(r.Body).Decode(&schedule); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body, expected single schedule object")
+		log.Printf("[%s] HandlePatchSchedule: failed to decode request body for chargerID=%s: %v", requestID(ctx), chargerID, err)
+		writeError(ctx, w, http.StatusBadRequest, "invalid request body, expected single schedule object")
 		return
 	}
 
-	if err := h.service.UpdatePartialSchedule(r.Context(), chargerID, schedule); err != nil {
+	if err := h.service.UpdatePartialSchedule(ctx, chargerID, schedule); err != nil {
+		log.Printf("[%s] HandlePatchSchedule: service error for chargerID=%s: %v", requestID(ctx), chargerID, err)
 		status := utils.HttpStatusForError(err)
-		writeError(w, status, err.Error())
+		writeError(ctx, w, status, err.Error())
 		return
 	}
 
@@ -156,15 +169,19 @@ func (h *HttpHandler) HandlePatchSchedule(w http.ResponseWriter, r *http.Request
 // @Failure      500  {object}  domain.ErrorResponse
 // @Router       /chargers/bulk/schedules [post]
 func (h *HttpHandler) HandleBulkUpdateSchedules(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	var req domain.BulkUpdateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body, expected BulkUpdateRequest object")
+		log.Printf("[%s] HandleBulkUpdateSchedules: failed to decode request body: %v", requestID(ctx), err)
+		writeError(ctx, w, http.StatusBadRequest, "invalid request body, expected BulkUpdateRequest object")
 		return
 	}
 
-	if err := h.service.BulkUpdateSchedules(r.Context(), req.ChargerIDs, req.Schedules); err != nil {
+	if err := h.service.BulkUpdateSchedules(ctx, req.ChargerIDs, req.Schedules); err != nil {
+		log.Printf("[%s] HandleBulkUpdateSchedules: service error for chargerIDs=%v: %v", requestID(ctx), req.ChargerIDs, err)
 		status := utils.HttpStatusForError(err)
-		writeError(w, status, err.Error())
+		writeError(ctx, w, status, err.Error())
 		return
 	}
 

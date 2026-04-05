@@ -6,11 +6,12 @@ import (
 	"presto_tou_service/handler"
 
 	httpSwagger "github.com/swaggo/http-swagger" // http-swagger middleware
-	_ "presto_tou_service/docs" // generated swagger docs
+	_ "presto_tou_service/docs"                  // generated swagger docs
 )
 
-// NewRouter sets up all the HTTP routes and returns a ServeMux.
-func NewRouter(httpHandler *handler.HttpHandler) *http.ServeMux {
+// NewRouter sets up all the HTTP routes and returns an http.Handler
+// wrapped with request-ID middleware.
+func NewRouter(httpHandler *handler.HttpHandler) http.Handler {
 	mux := http.NewServeMux()
 
 	// Charger routes
@@ -30,5 +31,5 @@ func NewRouter(httpHandler *handler.HttpHandler) *http.ServeMux {
 		w.Write([]byte(`{"status":"ok"}`))
 	})
 
-	return mux
+	return handler.RequestIDMiddleware(mux)
 }
