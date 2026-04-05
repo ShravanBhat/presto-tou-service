@@ -8,7 +8,7 @@ Energy providers use TOU pricing to vary electricity costs based on the time of 
 
 ---
 
-## 🏗️ Architecture & Key Design Choices
+## Architecture & Key Design Choices
 
 The service is built with reliability, consistency, and high concurrency in mind. Below are the key design decisions:
 
@@ -40,7 +40,7 @@ Updating pricing schedules, especially bulk updates, is highly susceptible to ra
 
 ---
 
-## 🔌 API Reference
+## API Reference
 
 ### Manage Pricing Schedules
 *   `GET /chargers/{id}/schedules` - Retrieve the 24-hour pricing schedule for a charger.
@@ -53,7 +53,7 @@ Updating pricing schedules, especially bulk updates, is highly susceptible to ra
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 *   Go 1.22+
@@ -62,7 +62,7 @@ Updating pricing schedules, especially bulk updates, is highly susceptible to ra
 ### Running the Service
 
 1. Clone the repository
-2. Apply the database schema: `psql -U your_user -d your_db -f schema.sql`
+2. Apply the database schema
 3. Set your environment variables (e.g., `DATABASE_URL`)
 4. Run the API:
    ```bash

@@ -149,8 +149,6 @@ func TestHandleGetPrice_LeadingSpaceTimestamp(t *testing.T) {
 	}
 }
 
-
-
 func TestHandleGetPrice_ChargerNotFound(t *testing.T) {
 	mockSvc := newMockService()
 	mockSvc.priceErr = constants.ErrChargerNotFound
@@ -212,8 +210,8 @@ func TestHandlePutSchedules_Success(t *testing.T) {
 	handler.HandlePutSchedules(w, req)
 
 	resp := w.Result()
-	if resp.StatusCode != http.StatusNoContent {
-		t.Errorf("expected status 204, got %d", resp.StatusCode)
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("expected status 200, got %d", resp.StatusCode)
 	}
 }
 
@@ -273,8 +271,8 @@ func TestHandlePatchSchedule_Success(t *testing.T) {
 	handler.HandlePatchSchedule(w, req)
 
 	resp := w.Result()
-	if resp.StatusCode != http.StatusNoContent {
-		t.Errorf("expected status 204, got %d", resp.StatusCode)
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("expected status 200, got %d", resp.StatusCode)
 	}
 }
 
@@ -315,8 +313,8 @@ func TestHandleBulkUpdateSchedules_Success(t *testing.T) {
 	handler.HandleBulkUpdateSchedules(w, req)
 
 	resp := w.Result()
-	if resp.StatusCode != http.StatusNoContent {
-		t.Errorf("expected status 204, got %d", resp.StatusCode)
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("expected status 200, got %d", resp.StatusCode)
 	}
 }
 

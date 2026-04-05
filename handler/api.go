@@ -24,6 +24,10 @@ import (
 // @Router       /chargers/{id}/price [get]
 func (h *HttpHandler) HandleGetPrice(w http.ResponseWriter, r *http.Request) {
 	chargerID := r.PathValue("id")
+	if strings.TrimSpace(chargerID) == constants.Empty {
+		writeError(w, http.StatusBadRequest, "charger_id cannot be empty")
+		return
+	}
 
 	timeParam := strings.TrimSpace(r.URL.Query().Get("timestamp"))
 	if timeParam == constants.Empty {
@@ -61,6 +65,10 @@ func (h *HttpHandler) HandleGetPrice(w http.ResponseWriter, r *http.Request) {
 // @Router       /chargers/{id}/schedules [get]
 func (h *HttpHandler) HandleGetSchedules(w http.ResponseWriter, r *http.Request) {
 	chargerID := r.PathValue("id")
+	if strings.TrimSpace(chargerID) == constants.Empty {
+		writeError(w, http.StatusBadRequest, "charger_id cannot be empty")
+		return
+	}
 
 	schedules, err := h.service.GetSchedules(r.Context(), chargerID)
 	if err != nil {
@@ -97,6 +105,10 @@ func (h *HttpHandler) HandleGetSchedules(w http.ResponseWriter, r *http.Request)
 // @Router       /chargers/{id}/schedules [put]
 func (h *HttpHandler) HandlePutSchedules(w http.ResponseWriter, r *http.Request) {
 	chargerID := r.PathValue("id")
+	if strings.TrimSpace(chargerID) == constants.Empty {
+		writeError(w, http.StatusBadRequest, "charger_id cannot be empty")
+		return
+	}
 
 	var schedules []domain.TOUSchedule
 	if err := json.NewDecoder(r.Body).Decode(&schedules); err != nil {
@@ -127,6 +139,10 @@ func (h *HttpHandler) HandlePutSchedules(w http.ResponseWriter, r *http.Request)
 // @Router       /chargers/{id}/schedules [patch]
 func (h *HttpHandler) HandlePatchSchedule(w http.ResponseWriter, r *http.Request) {
 	chargerID := r.PathValue("id")
+	if strings.TrimSpace(chargerID) == constants.Empty {
+		writeError(w, http.StatusBadRequest, "charger_id cannot be empty")
+		return
+	}
 
 	var schedule domain.TOUSchedule
 	if err := json.NewDecoder(r.Body).Decode(&schedule); err != nil {
